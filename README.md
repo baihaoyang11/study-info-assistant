@@ -4,6 +4,10 @@ QQ 只读 IMAP 邮件头工具，默认运行离线 Mock。仅获取最近最多
 
 本阶段仅实现 Python CLI；Canvas 仅有接口与固定课程 Mock。课程提取、分类、SQLite、摘要和其他邮箱留待后续阶段。
 
+代码仓库：[study-info-assistant](https://github.com/baihaoyang11/study-info-assistant)。后续开发以通过测试的功能提交同步；GitHub Actions 在 Python 3.11/3.12/3.13 上运行离线测试。私有配置、数据、输出和日志不提交。
+
+2026-10-12 已在当前 Codex 聊天创建半日自动任务（北京时间 09:00、21:00），当前为邮件头候选事项检查试运行：只覆盖最近 10 封邮件头，不能保证覆盖全部新邮件，也不能从主题可靠提取正文中的截止时间。Canvas 尚未接入。任务不是常驻邮箱守护进程，自动执行依赖本机和桌面应用运行及所需网络权限。完整自主待办目标与剩余接入信息见 [路线图](docs/agent_roadmap.md)。
+
 ## 安装
 
 Python 3.11+，PowerShell：
