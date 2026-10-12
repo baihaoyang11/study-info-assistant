@@ -112,3 +112,8 @@ class QQIMAPConnector:
                 client.shutdown()
             except (OSError, imaplib.IMAP4.error):
                 pass
+
+    def latest_messages(self, limit: int = 50):
+        """Read only non-attachment text parts; keep the existing header API."""
+        from .body_collection import collect_messages
+        return collect_messages(self, limit)

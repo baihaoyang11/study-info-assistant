@@ -10,6 +10,11 @@ class MailError(Exception):
         'PROTOCOL_ERROR': '邮箱返回了无法处理的响应。',
         'NOT_CONNECTED': '尚未建立只读邮箱连接。',
         'LIMIT_ERROR': '读取数量必须为 1 到 10。',
+        'SYNC_LIMIT_ERROR': '正文采集数量必须为 1 到 100。',
+        'BODY_DECODE_ERROR': '正文编码无法完整解析。',
+        'STORAGE_ERROR': '本地数据库读取或写入失败。',
+        'IMPORT_ERROR': '手动导入文件无效；请使用 UTF-8 TXT 或 Markdown，大小不超过 1 MiB。',
+        'ITEM_NOT_FOUND': '未找到该清单事项。',
     }
 
     def __init__(self, code):

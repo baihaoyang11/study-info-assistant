@@ -1,12 +1,8 @@
-# Academic Mail Agent · 第一阶段
+# Academic Mail Agent / Study Info Assistant · 0.2.0
 
-QQ 只读 IMAP 邮件头工具，默认运行离线 Mock。仅获取最近最多 10 封邮件的 Date、From、Subject、Message-ID；不读正文/附件，不发送、不标记已读、不移动、不删除。沿用 [已有开源评估](docs/open_source_evaluation.md)，没有复制其中七个项目的代码。
+QQ 邮件正文只读采集 → 本机 SQLite → 学业事项提取 → CLI 清单。默认离线 Mock；Canvas 只接受本地 TXT/Markdown，不连接学校平台。沿用 [开源评估](docs/open_source_evaluation.md)，没有复制被评估项目代码。原有邮件头 CLI 与 Mock 保留。
 
-本阶段仅实现 Python CLI；Canvas 仅有接口与固定课程 Mock。课程提取、分类、SQLite、摘要和其他邮箱留待后续阶段。
-
-代码仓库：[study-info-assistant](https://github.com/baihaoyang11/study-info-assistant)。后续开发以通过测试的功能提交同步；GitHub Actions 在 Python 3.11/3.12/3.13 上运行离线测试。私有配置、数据、输出和日志不提交。
-
-2026-10-12 已在当前 Codex 聊天创建半日自动任务（北京时间 09:00、21:00），当前为邮件头候选事项检查试运行：只覆盖最近 10 封邮件头，不能保证覆盖全部新邮件，也不能从主题可靠提取正文中的截止时间。Canvas 尚未接入。任务不是常驻邮箱守护进程，自动执行依赖本机和桌面应用运行及所需网络权限。完整自主待办目标与剩余接入信息见 [路线图](docs/agent_roadmap.md)。
+代码：[study-info-assistant](https://github.com/baihaoyang11/study-info-assistant)。通过测试的里程碑同步 GitHub；真实邮件、Canvas 内容、凭证、数据库与摘要不提交。
 
 ## 安装
 
@@ -18,50 +14,74 @@ python -m venv .venv
 .\.venv\Scripts\python.exe -m pip install -e ".[dev]"
 ```
 
-本次开发环境使用 Codex 自带 Python 3.12.14 和已安装的 Pydantic 2.13.5，并在项目 `.venv` 放置 pytest 9.1.1 与 python-dotenv 1.2.4。该环境引用本机 Codex 运行时；换机时请按以上命令重建，不复制 `.venv`。
+本机使用 Python 3.12.14、Pydantic 2.13.5、pytest 9.1.1、python-dotenv 1.2.4。`.venv` 引用本机 Codex 运行时，换机请重建。
 
-## 离线使用（已授权，可直接运行）
+## 离线使用
 
 ```powershell
-.\.venv\Scripts\academic-mail-agent.exe
-.\.venv\Scripts\academic-mail-agent.exe list
-.\.venv\Scripts\academic-mail-agent.exe list --detail
-.\.venv\Scripts\academic-mail-agent.exe diagnose
-.\.venv\Scripts\academic-mail-agent.exe --help
+# 演示与真实数据使用不同数据库
+.\.venv\Scripts\python.exe -m academic_mail_agent sync --db data/mock.sqlite3
+.\.venv\Scripts\python.exe -m academic_mail_agent import-canvas examples/canvas-note.md --source-name "演示课程页面" --db data/mock.sqlite3
+.\.venv\Scripts\python.exe -m academic_mail_agent todos --db data/mock.sqlite3
+.\.venv\Scripts\python.exe -m academic_mail_agent digest --db data/mock.sqlite3
+.\.venv\Scripts\python.exe -m academic_mail_agent todos --format json --db data/mock.sqlite3
 ```
 
-输出 JSON。默认隐藏所有主题；`--detail` 显示主题并在 stderr 提示隐私。发件人、Message-ID 和日期仍是个人数据，仅供本地展示。邮件内容作为不可信文本，不执行指令或链接，不上传外部 AI 服务，不自动写文件或记录日志。
-
-## 真实邮箱：已完成授权只读验收
-
-2026-10-12，用户确认后已完成真实 QQ 邮箱连接：通过 TLS 与认证，成功读取最近 3 封邮件的指定头字段，随后断开连接。未读取正文或附件，未发送邮件或执行写操作。验收未保存邮件内容。
-
-本机 `.env` 已配置账号和 IMAP 授权码，不在文档中记录凭证。其他机器可按 `.env.example` 配置 `QQ_EMAIL`、`QQ_IMAP_AUTH_CODE`（QQ 的 IMAP 授权码，非登录密码）、`QQ_IMAP_TIMEOUT`（秒，默认 15，范围 0 < timeout <= 120）。`.env` 已加入忽略清单；环境变量优先于文件，只读指定文件或当前目录 `.env`，不查找父目录，不插值、不修改环境变量。
+清单保留课程、类型、来源引用、原文证据、截止日期/时区、待核对原因、完成状态，按逾期、未来七天、待核对和其他事项分组。默认隐藏已完成事项；`--include-done` 单独展示已完成分组。
 
 ```powershell
-# 已授权的只读读取，默认隐藏主题：
-.\.venv\Scripts\academic-mail-agent.exe list --provider qq --allow-real-mailbox --limit 3
+# 替换为清单显示的 ID，只修改本机完成状态
+.\.venv\Scripts\python.exe -m academic_mail_agent complete ITEM_ID --db data/mock.sqlite3
+.\.venv\Scripts\python.exe -m academic_mail_agent complete ITEM_ID --reopen --db data/mock.sqlite3
 ```
 
-缺少 `--allow-real-mailbox` 时，在读取配置或构造连接之前退出。连接器 `connect()` 同样默认拒绝真实连接，必须显式 `allow_real=True`。这是操作授权门，邮箱侧 QQ 授权码本身并不是只读权限；只读限制由本程序的窄接口、EXAMINE/PEEK 和测试保证。
+## QQ 正文只读采集
 
-固定 `imap.qq.com:993`，使用默认安全 TLS 上下文，校验证书与主机名；INBOX 只读选择；以 UID 排序去重，从大到小最多 10 封。Date 缺失、无时区或坏格式返回 unknown；不会推断时区。坏服务器响应受控失败，UID FETCH 返回 ID 必须匹配请求。连接结束仅 logout/必要 shutdown，不使用 CLOSE。
-
-退出码：0 成功，2 授权/配置/网络/协议/参数错误，130 用户中断。错误仅输出固定错误码与说明，不输出原始服务器异常或凭证。没有自动重试和增量同步。
-
-## 离线验收
+本机 `.env` 已配置；其他机器按 `.env.example` 设置 `QQ_EMAIL`、`QQ_IMAP_AUTH_CODE` 和 `QQ_IMAP_TIMEOUT`。凭证不写入文档、数据库或输出。环境变量优先，只加载显式文件或当前目录 `.env`，不搜索父目录、不插值。
 
 ```powershell
-# 若沙箱临时目录/中文路径存在兼容问题，使用项目内临时目录：
+.\.venv\Scripts\python.exe -m academic_mail_agent sync --provider qq --allow-real-mailbox --limit 50 --env-file .env --db data/study.sqlite3
+.\.venv\Scripts\python.exe -m academic_mail_agent todos --db data/study.sqlite3
+.\.venv\Scripts\python.exe -m academic_mail_agent digest --db data/study.sqlite3
+```
+
+`sync` 默认最近 50 封，可选 1–100。固定 TLS `imap.qq.com:993`，验证证书和主机名，以只读 INBOX 与 UID `BODY.PEEK` 读取指定邮件头和文本 part。解析 BODYSTRUCTURE，跳过附件、带文件名的文本和嵌套邮件；HTML 转纯文本，不打开图片/链接。单 part 最多 256 KiB，单邮件文本最多 1 MiB，最多 32 个 part；超过限制或解码不完整标为待核对。正文与事项只保存在本机数据库。
+
+来源键含账号散列、INBOX、UIDVALIDITY、UID；重复来源更新，正文与事项同一事务写入。同一可识别事项更新截止时间时保留完成状态。失败不覆盖已存正文，清单展示最近结果与范围。**本版是最近窗口采集，不是完整增量/全部历史同步。**
+
+缺少 `--allow-real-mailbox` 时，在加载凭证或创建数据库前拒绝连接。QQ 授权码本身具有写权限；程序通过窄命令接口、EXAMINE/PEEK 与测试保持只读。不发送、标记已读、移动或删除邮件。
+
+2026-10-12 已在用户授权下成功验证最近 3 封真实 QQ 文本正文，本机保存来源与清单；这不代表全部邮箱或长期同步已验收。
+
+## Canvas 手动入口
+
+学校尚未允许外部接入。本版不调用 Canvas API，不自动操作浏览器。将有权查看的作业/公告文字保存为 UTF-8 `.txt` 或 `.md`：
+
+```powershell
+.\.venv\Scripts\python.exe -m academic_mail_agent import-canvas D:\notes\COMP101.md --source-name "COMP101 作业页面" --db data/study.sqlite3
+```
+
+文件最多 1 MiB；同一路径重新导入更新原来源，不同页面请使用不同路径。保留人工来源名与导入时间，没有自动核对远端变动。暂不支持 PDF、截图/OCR 或附件。
+
+## 提取与隐私边界
+
+本地规则识别关键词及完整数字年月日，例如 `2026-10-20`、`2026年10月20日`。作业/通知有截止标识才确定截止日期，考试可识别发生时间；明确时区才生成时间点。相对日期、英文月份、无年份/时区、多个候选日期、取消/延期或不完整正文需人工核对。规则可能漏提/误提，不保证覆盖全部学业事项。相同无区分名称的多个事项使用出现次序区分，编辑手动文件后需核对完成状态。
+
+不上传正文到外部模型，不执行邮件指令/链接。SQLite 是本机明文文件，清单包含原文证据，请按私有资料保管。`data/`、`.env`、日志与构建产物均忽略。`todos`/`digest` 只读本地数据，不联网。
+
+既有半日桌面任务仍是最近 10 封邮件头试运行；本次未升级定时任务，也未验证实际定时执行。没有常驻服务或 SMTP 送达模块。见 [路线图](docs/agent_roadmap.md)。
+
+## 兼容命令与验证
+
+`list` 保留最近 1–10 封邮件头读取，默认隐藏主题，`--detail` 本地显示；`diagnose` 不加载凭证、不联网；`--help` 查看全部命令。
+
+```powershell
 New-Item -ItemType Directory -Force .tmp | Out-Null
 $env:TMP = (Resolve-Path .tmp).Path
 $env:TEMP = $env:TMP
 $env:PYTHONUTF8 = '1'
 .\.venv\Scripts\python.exe -m pytest -q
+.\.venv\Scripts\python.exe -m pip wheel --no-deps --no-build-isolation --wheel-dir dist .
 ```
 
-pytest 自动阻断 socket 连接，协议测试只注入 Fake IMAP，不使用真实账号。另已完成一次用户授权的 QQ 真实只读验收；该验收不属于自动测试，也不代表长期同步或服务器所有响应均已验证。
-
-打包：`python -m pip wheel --no-deps --wheel-dir dist .`。详细结果见 `docs/phase1_validation.md`。
-
-参考协议语义：[Python 官方 imaplib 文档](https://docs.python.org/3/library/imaplib.html)。
+pytest 阻断 socket，仅用合成正文、Fake IMAP 和临时数据库；CI 在 Python 3.11/3.12/3.13 跑离线测试。退出码：0 成功，2 固定错误码/说明，130 用户中断；不输出服务器原始异常或授权码。见 [阶段二验收](docs/phase2_validation.md)、[阶段一记录](docs/phase1_validation.md)。

@@ -1,3 +1,3 @@
-"""Academic Mail Agent phase one: read-only metadata, offline by default."""
+"""Read-only academic mail and local study checklists, offline by default."""
 
-__version__ = '0.1.0'
+__version__ = '0.2.0'
