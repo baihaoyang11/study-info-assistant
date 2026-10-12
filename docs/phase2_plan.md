@@ -9,7 +9,7 @@
 - [x] SQLite 文档与事项存储：来源键含账号标识、UIDVALIDITY 和 UID；导入与提取同一事务；重复更新不重复插入，保留用户完成状态。
 - [x] CLI sync、todos、complete、import-canvas、digest；默认 Mock、真实 QQ 需显式授权；Canvas 只允许用户提供的本地 TXT/Markdown 文件，没有外部 API。
 - [x] 完整离线 pytest、Mock 流程验证、已授权真实 QQ 小范围只读验证、独立代码审查、文档。
-- [ ] GitHub 同步并确认 CI。
+- [x] GitHub 同步并确认 CI：功能提交 47fdf7a；Python 3.11/3.12/3.13 均成功。
 
 隐私：正文与数据库只存本机 data/，不保存原始附件或凭证，不上传外部模型。不会发送或修改任何邮件。清单是本地展示，不进行 SMTP 或其他消息发送。
 

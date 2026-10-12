@@ -27,3 +27,7 @@
 最近窗口之外的邮件、完整增量/全历史采集、长期稳定性；英文月份及复杂自然语言日期；跨来源合并；自动定时正文执行和外部摘要送达。既有半日邮件头试运行任务本次未升级。
 
 Canvas 仅导入用户提供的 UTF-8 TXT/Markdown，不连接 API/浏览器。SQLite 与摘要为本机明文私有资料。数据、凭证和构建产物不提交 Git。
+
+## GitHub 验证
+
+功能提交 `47fdf7a` 已同步至 main。暂存隐私检查确认 21 个公开代码/测试/文档文件不含已配置授权码或私有数据路径。GitHub Actions 的 Python 3.11、3.12、3.13 任务均成功：[运行记录](https://github.com/baihaoyang11/study-info-assistant/actions/runs/38210906058)。
